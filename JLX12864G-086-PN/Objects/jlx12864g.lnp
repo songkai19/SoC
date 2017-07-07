@@ -1,0 +1,3 @@
+".\Objects\jlx12864g.obj" 
+TO ".\Objects\jlx12864g" 
+PRINT(".\Listings\jlx12864g.m51") RAMSIZE(256) 

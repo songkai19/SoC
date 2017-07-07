@@ -1,0 +1,147 @@
+#include <reg52.h>
+
+#define LCM_Data  P1
+#define Busy    0x80 //
+
+sbit LCM_RW = P2^0;
+sbit LCM_RS = P2^1;
+sbit LCM_E = P2^2;
+
+void WriteDataLCM(unsigned char WDLCM);
+void WriteCommandLCM(unsigned char WCLCM,BuysC);
+unsigned char ReadDataLCM(void);
+unsigned char ReadStatusLCM(void);
+void LCMInit(void);
+void DisplayOneChar(unsigned char X, unsigned char Y, unsigned char DData);
+void DisplayListChar(unsigned char X, unsigned char Y, unsigned char code *DData);
+void Delay5Ms(void);
+void Delay400Ms(void);
+
+unsigned char code uctech[] = {"uctech"};
+unsigned char code net[] = {"uctech.icpcn.com"};
+
+void main(void)
+{
+ Delay400Ms(); //????,?LCM??????
+ LCMInit(); //LCM???
+ Delay5Ms(); //????(???)
+
+ DisplayListChar(0, 5, uctech);
+ DisplayListChar(0, 0, net);
+ ReadDataLCM();//???????
+ while(1);
+}
+
+//???
+void WriteDataLCM(unsigned char WDLCM)
+{
+ ReadStatusLCM(); //???
+ LCM_Data = WDLCM;
+ LCM_RS = 1;
+ LCM_RW = 0;
+ LCM_E = 0; //?????????????????
+ LCM_E = 0; //??
+ LCM_E = 1;
+}
+
+//???
+void WriteCommandLCM(unsigned char WCLCM,BuysC) //BuysC?0??????
+{
+ if (BuysC) ReadStatusLCM(); //???????
+ LCM_Data = WCLCM;
+ LCM_RS = 0;
+ LCM_RW = 0; 
+ LCM_E = 0;
+ LCM_E = 0;
+ LCM_E = 1; 
+}
+
+//???
+unsigned char ReadDataLCM(void)
+{
+ LCM_RS = 1; 
+ LCM_RW = 1;
+ LCM_E = 0;
+ LCM_E = 0;
+ LCM_E = 1;
+ return(LCM_Data);
+}
+
+//???
+unsigned char ReadStatusLCM(void)
+{
+ LCM_Data = 0xFF; 
+ LCM_RS = 0;
+ LCM_RW = 1;
+ LCM_E = 0;
+ LCM_E = 0;
+ LCM_E = 1;
+ while (LCM_Data & Busy); //?????
+ return(LCM_Data);
+}
+
+void LCMInit(void) //LCM???
+{
+ LCM_Data = 0;
+ WriteCommandLCM(0x38,0); //????????,??????
+ Delay5Ms(); 
+ WriteCommandLCM(0x38,0);
+ Delay5Ms(); 
+ WriteCommandLCM(0x38,0);
+ Delay5Ms(); 
+
+ WriteCommandLCM(0x38,1); //??????,???????????
+ WriteCommandLCM(0x08,1); //????
+ WriteCommandLCM(0x01,1); //????
+ WriteCommandLCM(0x06,1); // ????????
+ WriteCommandLCM(0x0C,1); // ????????
+}
+
+//???????????
+void DisplayOneChar(unsigned char X, unsigned char Y, unsigned char DData)
+{
+ Y &= 0x1;
+ X &= 0xF; //??X????15,Y????1
+ if (Y) X |= 0x40; //???????????+0x40;
+ X |= 0x80; // ?????
+ WriteCommandLCM(X, 0); //????????,?????
+ WriteDataLCM(DData);
+}
+
+//???????????
+void DisplayListChar(unsigned char X, unsigned char Y, unsigned char code *DData)
+{
+ unsigned char ListLength;
+
+  ListLength = 0;
+ Y &= 0x1;
+ X &= 0xF; //??X????15,Y????1
+ while (DData[ListLength]>0x20) //?????????
+  {
+   if (X <= 0xF) //X?????0xF
+    {
+     DisplayOneChar(X, Y, DData[ListLength]); //??????
+     ListLength++;
+     X++;
+    }
+  }
+}
+
+//5ms??
+void Delay5Ms(void)
+{
+ unsigned int TempCyc = 5552;
+ while(TempCyc--);
+}
+
+//400ms??
+void Delay400Ms(void)
+{
+ unsigned char TempCycA = 5;
+ unsigned int TempCycB;
+ while(TempCycA--)
+ {
+  TempCycB=7269;
+  while(TempCycB--);
+ };
+ }

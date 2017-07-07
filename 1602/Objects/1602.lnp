@@ -1,0 +1,5 @@
+".\Objects\1602.obj",
+".\Objects\fun.obj",
+".\Objects\test_lcd.obj" 
+TO ".\Objects\1602" 
+PRINT(".\Listings\1602.m51") RAMSIZE(256) 
