@@ -1,0 +1,4 @@
+"STARTUP.obj",
+".\12864_cqys.obj" 
+TO "JLX_TS" 
+RAMSIZE(256) 

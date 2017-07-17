@@ -344,7 +344,7 @@ void main(void)
 	Initial_ic();					/*初始化*/
 	while(1)
 	{
-		Initial_ic();				/*初始化*/
+		//Initial_ic();				/*初始化*/
 		clear_screen();
 		display_12864(1,1,graphic1);/*（从第1行，第1列开始，显示图片128*64点阵*/			
 		//Switch();			 		/*等待按键P2.0口*/

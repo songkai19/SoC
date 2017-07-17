@@ -25,10 +25,10 @@
 #define LINE_2_OFFSET	0x40		  //第二行起始地址
 #define BUSY_FLAG_ADDR	0x80          //设置BUSY所在地址
 
-#define DB	P1			// Data bus
+#define DB	P0			// Data bus
 
-sbit RW = P2^0;
-sbit RS = P2^1;
+sbit RW = P2^1;
+sbit RS = P2^0;
 sbit E = P2^2;
 
 void lcd1602_check_busy(void);

@@ -1,3 +1,4 @@
-".\Objects\12864C_p.obj" 
+".\Objects\main.obj",
+".\Objects\12864_s.obj" 
 TO ".\Objects\12864C" 
 PRINT(".\Listings\12864C.m51") RAMSIZE(256) 

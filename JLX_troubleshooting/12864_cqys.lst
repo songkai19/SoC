@@ -1,0 +1,345 @@
+C51 COMPILER V9.56.0.0   12864_CQYS                                                        07/11/2017 16:00:48 PAGE 1   
+
+
+C51 COMPILER V9.56.0.0, COMPILATION OF MODULE 12864_CQYS
+OBJECT MODULE PLACED IN .\12864_cqys.obj
+COMPILER INVOKED BY: D:\Program Files\Keil_v5\C51\BIN\C51.EXE ..\JLX12864C-1\12864_cqys.c OPTIMIZE(8,SPEED) BROWSE DEBUG
+                    - OBJECTEXTEND LISTINCLUDE PRINT(.\12864_cqys.lst) OBJECT(.\12864_cqys.obj)
+
+line level    source
+
+   1          /********************************************************************
+   2          * 文件名  ： 串行12864显示.c
+   3          * 描述    :  该程序实现了12864以串行的方式进行通信。
+   4          * 创建人  ： 东流，2009年4月10日
+   5          * 版本号  ： 2.0
+   6          ***********************************************************************/
+   7          #include <reg52.h>
+   1      =1  /*--------------------------------------------------------------------------
+   2      =1  REG52.H
+   3      =1  
+   4      =1  Header file for generic 80C52 and 80C32 microcontroller.
+   5      =1  Copyright (c) 1988-2002 Keil Elektronik GmbH and Keil Software, Inc.
+   6      =1  All rights reserved.
+   7      =1  --------------------------------------------------------------------------*/
+   8      =1  
+   9      =1  #ifndef __REG52_H__
+  10      =1  #define __REG52_H__
+  11      =1  
+  12      =1  /*  BYTE Registers  */
+  13      =1  sfr P0    = 0x80;
+  14      =1  sfr P1    = 0x90;
+  15      =1  sfr P2    = 0xA0;
+  16      =1  sfr P3    = 0xB0;
+  17      =1  sfr PSW   = 0xD0;
+  18      =1  sfr ACC   = 0xE0;
+  19      =1  sfr B     = 0xF0;
+  20      =1  sfr SP    = 0x81;
+  21      =1  sfr DPL   = 0x82;
+  22      =1  sfr DPH   = 0x83;
+  23      =1  sfr PCON  = 0x87;
+  24      =1  sfr TCON  = 0x88;
+  25      =1  sfr TMOD  = 0x89;
+  26      =1  sfr TL0   = 0x8A;
+  27      =1  sfr TL1   = 0x8B;
+  28      =1  sfr TH0   = 0x8C;
+  29      =1  sfr TH1   = 0x8D;
+  30      =1  sfr IE    = 0xA8;
+  31      =1  sfr IP    = 0xB8;
+  32      =1  sfr SCON  = 0x98;
+  33      =1  sfr SBUF  = 0x99;
+  34      =1  
+  35      =1  /*  8052 Extensions  */
+  36      =1  sfr T2CON  = 0xC8;
+  37      =1  sfr RCAP2L = 0xCA;
+  38      =1  sfr RCAP2H = 0xCB;
+  39      =1  sfr TL2    = 0xCC;
+  40      =1  sfr TH2    = 0xCD;
+  41      =1  
+  42      =1  
+  43      =1  /*  BIT Registers  */
+  44      =1  /*  PSW  */
+  45      =1  sbit CY    = PSW^7;
+  46      =1  sbit AC    = PSW^6;
+  47      =1  sbit F0    = PSW^5;
+C51 COMPILER V9.56.0.0   12864_CQYS                                                        07/11/2017 16:00:48 PAGE 2   
+
+  48      =1  sbit RS1   = PSW^4;
+  49      =1  sbit RS0   = PSW^3;
+  50      =1  sbit OV    = PSW^2;
+  51      =1  sbit P     = PSW^0; //8052 only
+  52      =1  
+  53      =1  /*  TCON  */
+  54      =1  sbit TF1   = TCON^7;
+  55      =1  sbit TR1   = TCON^6;
+  56      =1  sbit TF0   = TCON^5;
+  57      =1  sbit TR0   = TCON^4;
+  58      =1  sbit IE1   = TCON^3;
+  59      =1  sbit IT1   = TCON^2;
+  60      =1  sbit IE0   = TCON^1;
+  61      =1  sbit IT0   = TCON^0;
+  62      =1  
+  63      =1  /*  IE  */
+  64      =1  sbit EA    = IE^7;
+  65      =1  sbit ET2   = IE^5; //8052 only
+  66      =1  sbit ES    = IE^4;
+  67      =1  sbit ET1   = IE^3;
+  68      =1  sbit EX1   = IE^2;
+  69      =1  sbit ET0   = IE^1;
+  70      =1  sbit EX0   = IE^0;
+  71      =1  
+  72      =1  /*  IP  */
+  73      =1  sbit PT2   = IP^5;
+  74      =1  sbit PS    = IP^4;
+  75      =1  sbit PT1   = IP^3;
+  76      =1  sbit PX1   = IP^2;
+  77      =1  sbit PT0   = IP^1;
+  78      =1  sbit PX0   = IP^0;
+  79      =1  
+  80      =1  /*  P3  */
+  81      =1  sbit RD    = P3^7;
+  82      =1  sbit WR    = P3^6;
+  83      =1  sbit T1    = P3^5;
+  84      =1  sbit T0    = P3^4;
+  85      =1  sbit INT1  = P3^3;
+  86      =1  sbit INT0  = P3^2;
+  87      =1  sbit TXD   = P3^1;
+  88      =1  sbit RXD   = P3^0;
+  89      =1  
+  90      =1  /*  SCON  */
+  91      =1  sbit SM0   = SCON^7;
+  92      =1  sbit SM1   = SCON^6;
+  93      =1  sbit SM2   = SCON^5;
+  94      =1  sbit REN   = SCON^4;
+  95      =1  sbit TB8   = SCON^3;
+  96      =1  sbit RB8   = SCON^2;
+  97      =1  sbit TI    = SCON^1;
+  98      =1  sbit RI    = SCON^0;
+  99      =1  
+ 100      =1  /*  P1  */
+ 101      =1  sbit T2EX  = P1^1; // 8052 only
+ 102      =1  sbit T2    = P1^0; // 8052 only
+ 103      =1               
+ 104      =1  /*  T2CON  */
+ 105      =1  sbit TF2    = T2CON^7;
+ 106      =1  sbit EXF2   = T2CON^6;
+ 107      =1  sbit RCLK   = T2CON^5;
+ 108      =1  sbit TCLK   = T2CON^4;
+ 109      =1  sbit EXEN2  = T2CON^3;
+C51 COMPILER V9.56.0.0   12864_CQYS                                                        07/11/2017 16:00:48 PAGE 3   
+
+ 110      =1  sbit TR2    = T2CON^2;
+ 111      =1  sbit C_T2   = T2CON^1;
+ 112      =1  sbit CP_RL2 = T2CON^0;
+ 113      =1  
+ 114      =1  #endif
+   8          #include <intrins.h>
+   1      =1  /*--------------------------------------------------------------------------
+   2      =1  INTRINS.H
+   3      =1  
+   4      =1  Intrinsic functions for C51.
+   5      =1  Copyright (c) 1988-2010 Keil Elektronik GmbH and ARM Germany GmbH
+   6      =1  All rights reserved.
+   7      =1  --------------------------------------------------------------------------*/
+   8      =1  
+   9      =1  #ifndef __INTRINS_H__
+  10      =1  #define __INTRINS_H__
+  11      =1  
+  12      =1  #pragma SAVE
+  13      =1  
+  14      =1  #if defined (__CX2__)
+           =1 #pragma FUNCTIONS(STATIC)
+           =1 /* intrinsic functions are reentrant, but need static attribute */
+           =1 #endif
+  18      =1  
+  19      =1  extern void          _nop_     (void);
+  20      =1  extern bit           _testbit_ (bit);
+  21      =1  extern unsigned char _cror_    (unsigned char, unsigned char);
+  22      =1  extern unsigned int  _iror_    (unsigned int,  unsigned char);
+  23      =1  extern unsigned long _lror_    (unsigned long, unsigned char);
+  24      =1  extern unsigned char _crol_    (unsigned char, unsigned char);
+  25      =1  extern unsigned int  _irol_    (unsigned int,  unsigned char);
+  26      =1  extern unsigned long _lrol_    (unsigned long, unsigned char);
+  27      =1  extern unsigned char _chkfloat_(float);
+  28      =1  #if defined (__CX2__)
+           =1 extern int           abs       (int);
+           =1 extern void          _illop_   (void);
+           =1 #endif
+  32      =1  #if !defined (__CX2__)
+  33      =1  extern void          _push_    (unsigned char _sfr);
+  34      =1  extern void          _pop_     (unsigned char _sfr);
+  35      =1  #endif
+  36      =1  
+  37      =1  #pragma RESTORE
+  38      =1  
+  39      =1  #endif
+  40      =1  
+   9          #define uchar unsigned char
+  10          #define uint  unsigned int
+  11          
+  12          sbit CS=P3^2;       //片选信号
+  13          sbit SID=P3^1;          //数据信号
+  14          sbit SCLK=P3^0;         //时钟信号 
+  15          sbit RST=P3^3;          //复位信号
+  16          sbit CH = P3^4;         //并行、串行选择信号
+  17          
+  18          /********************************************************************
+  19          * 名称 : delay()
+  20          * 功能 : 延时,延时时间为 100us * t。这是通过软件延时，有一定误差。
+  21          * 输入 : t
+  22          * 输出 : 无
+  23          ***********************************************************************/
+  24          void delay(unsigned int t)
+C51 COMPILER V9.56.0.0   12864_CQYS                                                        07/11/2017 16:00:48 PAGE 4   
+
+  25          {
+  26   1              unsigned int i,j;
+  27   1              for(i=0; i<t;  i++)
+  28   1          for(j=0; j<10; j++);
+  29   1      }
+  30          
+  31          /********************************************************************
+  32          * 名称 : sendbyte()
+  33          * 功能 : 按照液晶的串口通信协议，发送数据
+  34          * 输入 : zdata
+  35          * 输出 : 无
+  36          ***********************************************************************/
+  37          void sendbyte(unsigned char zdata)
+  38          {
+  39   1              unsigned int i;
+  40   1              for(i=0; i<8; i++)
+  41   1              {
+  42   2                      if((zdata << i) & 0x80)
+  43   2                      {
+  44   3                              SID = 1;
+  45   3                      }
+  46   2                      else 
+  47   2                      {
+  48   3                              SID = 0;
+  49   3                      }
+  50   2                      SCLK = 0;
+  51   2                      SCLK = 1;
+  52   2              }
+  53   1      }
+  54          
+  55          /********************************************************************
+  56          * 名称 : write_com()
+  57          * 功能 : 写串口指令
+  58          * 输入 : cmdcode
+  59          * 输出 : 无
+  60          ***********************************************************************/
+  61          void write_com(unsigned char cmdcode)
+  62          {
+  63   1              CS = 1;
+  64   1              sendbyte(0xf8);
+  65   1              sendbyte(cmdcode & 0xf0);
+  66   1              sendbyte((cmdcode << 4) & 0xf0);
+  67   1              delay(2);
+  68   1      }
+  69          
+  70          /********************************************************************
+  71          * 名称 : write_data()
+  72          * 功能 : 写串口指令
+  73          * 输入 : cmdcode
+  74          * 输出 : 无
+  75          ***********************************************************************/
+  76          void write_data(unsigned char Dispdata)
+  77          {
+  78   1              CS = 1;
+  79   1              sendbyte(0xfa);
+  80   1              sendbyte(Dispdata & 0xf0);
+  81   1              sendbyte((Dispdata << 4) & 0xf0);
+  82   1              delay(2);
+  83   1      }
+  84          
+  85          /********************************************************************
+  86          * 名称 : lcdinit()
+C51 COMPILER V9.56.0.0   12864_CQYS                                                        07/11/2017 16:00:48 PAGE 5   
+
+  87          * 功能 : 初始化函数
+  88          * 输入 : cmdcode
+  89          * 输出 : 无
+  90          ***********************************************************************/
+  91          void lcdinit()
+  92          {  
+  93   1              RST = 0;
+  94   1              delay(100);
+  95   1              RST = 1;
+  96   1              delay(20000);
+  97   1              write_com(0x30);
+  98   1              delay(50);
+  99   1              write_com(0x0c);
+ 100   1              delay(50);
+ 101   1      }
+ 102          
+ 103          /********************************************************************
+ 104          * 名称 : hzkdis()
+ 105          * 功能 : 显示字符串
+ 106          * 输入 : *s
+ 107          * 输出 : 无
+ 108          ***********************************************************************/
+ 109          void hzkdis(unsigned char code *s)
+ 110          {  
+ 111   1              while(*s > 0)
+ 112   1          { 
+ 113   2                      write_data(*s);
+ 114   2                      s++;
+ 115   2                      delay(50);
+ 116   2          }
+ 117   1      }
+ 118          
+ 119          /********************************************************************
+ 120          * 名称 : Test()
+ 121          * 功能 : 显示子函数
+ 122          * 输入 : 无
+ 123          * 输出 : 无
+ 124          ***********************************************************************/
+ 125          void Test()
+ 126          {  
+ 127   1              write_com(0x03);
+ 128   1              delay(50);    
+ 129   1              write_com(0x81);
+ 130   1              hzkdis("   HOT-51");
+ 131   1              write_com(0x91);
+ 132   1              hzkdis("单片机开发板");
+ 133   1              write_com(0x89);
+ 134   1              hzkdis("          ");
+ 135   1              write_com(0x98);
+ 136   1              hzkdis("    东流电子");
+ 137   1      }
+ 138          
+ 139          
+ 140          /********************************************************************
+ 141          * 名称 : Main()
+ 142          * 功能 : 主函数
+ 143          * 输入 : 无
+ 144          * 输出 : 无
+ 145          ***********************************************************************/
+ 146          void Main()
+ 147          { 
+ 148   1              CH = 0;
+C51 COMPILER V9.56.0.0   12864_CQYS                                                        07/11/2017 16:00:48 PAGE 6   
+
+ 149   1              delay(1);
+ 150   1              lcdinit();
+ 151   1              delay(10);
+ 152   1              while(1)
+ 153   1              {
+ 154   2                      Test();
+ 155   2                      delay(5000);
+ 156   2              }
+ 157   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    280    ----
+   CONSTANT SIZE    =     47    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----       2
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)
