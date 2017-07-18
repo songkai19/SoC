@@ -1,5 +1,6 @@
 /*   头文件    */
-#include<reg52.h>
+#include <reg52.h>
+#include <1602_2.h>
  
 /*   宏定义    */
 #define uint  unsigned int
@@ -9,15 +10,12 @@
 #define T1MS (65536-FOSC/12/500)   //2ms timer calculation method in 12T mode
 /* define SFR */
 sbit TEST_LED = P1^0;               //work LED, flash once per second
-
 /*     变量定义      */
 uint count=100;  //周期计时
 uchar cnt_PM25=0;	//数码管PM2.5循环计数
 uchar R_data=0; //读数据标志
-
-
 /*------激光传感器-------------*/
-uchar USART_RX_STB=0;
+uchar USART_RX_STB=0;      
 uchar complete_flag=1;
 uchar USART_RX_BUF[16];  //接收缓冲,最大16个字节.
 uchar jj=0;              //判断串口一帧数据是否接收完成的计数变量
@@ -26,18 +24,15 @@ uchar PM10_data[2] = {0};
 uchar PM_ASC[8];				 //数据分解后的存储数组
 uint HR_crc = 0;
 uint check = 0;
-
 //-------开机、读数据、关机指令----------------------------------
 uchar code open[9]={0xAA,0x01,0x00,0x00,0x00,0x00,0x01,0x66,0xBB};
 uchar code shuju[9]={0xAA,0x02,0x00,0x00,0x00,0x00,0x01,0x67,0xBB};
 uchar code close[9]={0xAA,0x03,0x00,0x00,0x00,0x00,0x01,0x68,0xBB};
-
 //------------数码管-------------------------------------
 //uchar code DIS_SEG7[]={0xc0,0xf9,0xa4,0xb0,0x99,0x92,0x82,0xf8,0x80,0x90};	 		 //共阳极数码管编码0~9
 uchar code DIS_SEG7[10]={0x3f,0x06,0x5b,0x4f,0x66,0x6d,0x7d,0x07,0x7f,0x6f};			 //共阴极数码管编码0~9
-uchar code DIS_BIT[8]={0x80,0x81,0x82,0x83,0x84,0x85,0x86,0x87}; 						 //位选，选择哪一位数码管显示
+uchar code DIS_BIT[8]={0x80,0x81,0x82,0x83,0x84,0x85,0x86,0x87}; 									 //位选，选择哪一位数码管显示
 uchar DISP[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
-
 //---------函数声明------------------------------------
 void Serial_Init(void);
 void Timer0_Init(void);
@@ -45,7 +40,6 @@ void Serial_send(uchar send);
 void Delay_1ms(uint z);
 void shuju_jiexi(void);
 uint FucCheckSum(uchar dd[]);
-
 /****************************************************/
 //main function
 //
@@ -103,7 +97,6 @@ void main()
     }
  	} 
 }
-
 /****************************************************/
 //serial Timer0 initial
 /****************************************************/
@@ -117,7 +110,6 @@ void Serial_Init(void)
 	 TR1  = 1;  //open timer 1
 	 ES   = 1;  //open the serial
 }
-
 void Timer0_Init(void)
 {
     TMOD |= 0x01;                    //set timer0 as mode1 (16-bit)
@@ -126,9 +118,8 @@ void Timer0_Init(void)
     TR0 = 1;                        //timer0 start running
     ET0 = 1;                        //enable timer0 interrupt
     EA = 1;                         //open global interrupt switch
-	count=1000;
+		count=1000;
 }
-
 /****************************************************/
 //serial interrupt function		 串口中断函数
 /****************************************************/

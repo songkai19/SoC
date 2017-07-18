@@ -1,5 +1,5 @@
-#include <string.h>
-#include <1602_2.h>
+#include "string.h"
+#include "1602_2.h"
 
 uint8 code tempSymbol[8]={ 0x10,0x06,0x09,0x08,0x08,0x09,0x06,0x00 };
 uint8 code piSymbol[8]={ 0x00,0x1f,0x0a,0x0a,0x0a,0x13,0x00,0x00 };
@@ -13,11 +13,11 @@ void main()
 {
 	lcd1602_initial();
 	
-	// ÏòCGRAMµØÖ·Ğ´Èë×Ô¶¨Òå×Ö·û
+	// å‘CGRAMåœ°å€å†™å…¥è‡ªå®šä¹‰å­—ç¬¦
 	lcd1602_write_str(SET_CGRAM_ADDR, 8, tempSymbol);
 	lcd1602_write_str(SET_CGRAM_ADDR|0x08, 8, piSymbol);
 	
-	// ÏòDDRAMĞ´ÈëÊä³ö×Ö·û´®
+	// å‘DDRAMå†™å…¥è¾“å‡ºå­—ç¬¦ä¸²
 	lcd1602_write_str(SET_DDRAM_ADDR, strlen(strMCU), strMCU);
 	lcd1602_write_str(SET_DDRAM_ADDR|LINE_2_OFFSET, strlen(strTest), strTest);
 	
@@ -25,20 +25,20 @@ void main()
 	lcd1602_write_com(CLEAR, 1);
 	lcd1602_delay(500);
 	
-	// CGRAMµÄµØÖ·Æ«ÒÆÁ¿ÎªÁã£¬ËùÒÔÕâÀï0Î»ÖÃÊÇÉÏÃæ¶¨ÒåĞ´ÈëµÄÎÂ¶È·ûºÅ£¬1Î»ÖÃÊÇpi·ûºÅ
+	// CGRAMçš„åœ°å€åç§»é‡ä¸ºé›¶ï¼Œæ‰€ä»¥è¿™é‡Œ0ä½ç½®æ˜¯ä¸Šé¢å®šä¹‰å†™å…¥çš„æ¸©åº¦ç¬¦å·ï¼Œ1ä½ç½®æ˜¯piç¬¦å·
 	for (i = 0; i < 16; i++) lcd1602_write_dat(0);
-	lcd1602_write_com(SET_DDRAM_ADDR|LINE_2_OFFSET);
+	lcd1602_write_com(SET_DDRAM_ADDR|LINE_2_OFFSET, 1);
 	for (i = 0; i < 16; i++) lcd1602_write_dat(1);
 	
 	for (i = 0; i < 50; i++) lcd1602_delay(10000);
 	lcd1602_write_com(CLEAR, 1);
 	lcd1602_delay(500);
 	
-	// ³¢ÊÔĞ´µ½DDRAMÏÔÊ¾µØÖ·Ö®Íâ
+	// å°è¯•å†™åˆ°DDRAMæ˜¾ç¤ºåœ°å€ä¹‹å¤–
 	lcd1602_write_str(SET_DDRAM_ADDR|0x10, strlen(blog), blog);
 	while(1)
 	{
-		 // ×óÒÆÏÔÊ¾½çÍâÄÚÈİ
+		 // å·¦ç§»æ˜¾ç¤ºç•Œå¤–å†…å®¹
 		lcd1602_write_com(0x18, 1);
 			
 		for (i = 0; i < 20; i++) lcd1602_delay(2000);		

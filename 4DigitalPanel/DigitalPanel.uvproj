@@ -45,7 +45,7 @@
             <InvalidFlash>1</InvalidFlash>
           </TargetStatus>
           <OutputDirectory>.\Objects\</OutputDirectory>
-          <OutputName>UART</OutputName>
+          <OutputName>DigitalPanel</OutputName>
           <CreateExecutable>1</CreateExecutable>
           <CreateLib>0</CreateLib>
           <CreateHexFile>1</CreateHexFile>
@@ -369,9 +369,9 @@
               <FilePath>.\STARTUP.A51</FilePath>
             </File>
             <File>
-              <FileName>useT1wLed.c</FileName>
+              <FileName>rolling.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\useT1wLed.c</FilePath>
+              <FilePath>.\rolling.c</FilePath>
             </File>
           </Files>
         </Group>
