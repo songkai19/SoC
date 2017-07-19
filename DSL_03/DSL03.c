@@ -44,7 +44,9 @@ uchar code DIS_BIT[8]={0xA0,0xA1,0xA2,0xA3}; 						 //位选，选择哪一位�
 uchar DISP[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
 
 //LCD 1602 
-uchar code strWelc[] = "Hello Geoffrey!";
+char* resultStr;
+char* tempStr;
+uint i;
 
 //---------函数声明------------------------------------
 void ConfigUART(uint baud);
@@ -80,16 +82,40 @@ void main()
 			for(i=0;i<9;i++)
 			{
 				Serial_send(retrieveComm[i]);
-				Delay_1ms(2);
+				//Delay_1ms(2);
 			}
+			
+//			tempStr = "RXD signal sent.";
+//			lcd1602_write_str(SET_DDRAM_ADDR, strlen(tempStr), tempStr);
+//			
+//			for (i = 0; i < 50; i++) lcd1602_delay(10000);
+//			lcd1602_write_com(CLEAR, 1);
+//			lcd1602_delay(500);
+			
 			R_data=1;
 			{
 				if(complete_flag==1)
 				{
+//					tempStr = "Data retrieved.";
+//					lcd1602_write_str(SET_DDRAM_ADDR, strlen(tempStr), tempStr);
+//					
+//					for (i = 0; i < 50; i++) lcd1602_delay(10000);
+//					lcd1602_write_com(CLEAR, 1);
+//					lcd1602_delay(500);
+					
 					HR_crc = FucCheckSum(USART_RX_BUF);    //待校验值
+					
 					check = ((uint)USART_RX_BUF[6]<<8) + USART_RX_BUF[7];   //校验值位
+					
 					if((HR_crc == check)) //判断接收的数据是否正确
 					{
+//						tempStr = "Checksum done.";
+//						lcd1602_write_str(SET_DDRAM_ADDR, strlen(tempStr), tempStr);
+//						
+//						for (i = 0; i < 50; i++) lcd1602_delay(10000);
+//						lcd1602_write_com(CLEAR, 1);
+//						lcd1602_delay(500);
+						
 						if(USART_RX_BUF[1]==0x02)   //2次校验数据标志位，以确保正确性
 						{
 							PM10_data[0] = USART_RX_BUF[2];
@@ -158,7 +184,32 @@ void InterruptTimer0() interrupt 1 using 1
 //	}
 	
 	//换1602显示结果
-	lcd1602_write_str(SET_DDRAM_ADDR, strlen(strWelc), strWelc);
+	if (R_data == 1)
+	{
+		strcpy(resultStr, "PM2.5: ");
+		strcat(resultStr, &PM_ASC[0]);
+		strcat(resultStr, " ");
+		strcat(resultStr, &PM_ASC[1]);
+		strcat(resultStr, " ");
+		strcat(resultStr, &PM_ASC[2]);
+		strcat(resultStr, " ");
+		strcat(resultStr, &PM_ASC[3]);
+		strcat(resultStr, " ");
+		
+		lcd1602_write_str(SET_DDRAM_ADDR, strlen(resultStr), resultStr);
+		
+		strcpy(resultStr, "PM10: ");
+		strcat(resultStr, &PM_ASC[4]);
+		strcat(resultStr, " ");
+		strcat(resultStr, &PM_ASC[5]);
+		strcat(resultStr, " ");
+		strcat(resultStr, &PM_ASC[6]);
+		strcat(resultStr, " ");
+		strcat(resultStr, &PM_ASC[7]);
+		strcat(resultStr, " ");
+		
+		lcd1602_write_str(SET_DDRAM_ADDR|LINE_2_OFFSET, strlen(resultStr), resultStr);
+	}
 	
 	jj++;	
 	if(jj>2) {
@@ -181,17 +232,17 @@ void InterruptUART() interrupt 4 using 2
 			complete_flag=1;
 		}
 	}
-	if (TI)  //字节发送完毕
-	{
-		TI = 0;  //手动清零发送中断标志位
-	}
+//	if (TI)  //字节发送完毕
+//	{
+//		TI = 0;  //手动清零发送中断标志位
+//	}
 }
 
 void Serial_send(uchar send)
 {	
 	SBUF = send;
-//	while(!TI);
-//	TI=0;
+	while(!TI);
+	TI=0;
 }
 
 //把接收到的数据1~6和8位相加
