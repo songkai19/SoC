@@ -26,7 +26,7 @@
     <ToolsetNumber>0x0</ToolsetNumber>
     <ToolsetName>MCS-51</ToolsetName>
     <TargetOption>
-      <CLK51>12000000</CLK51>
+      <CLK51>45000000</CLK51>
       <OPTTT>
         <gFlags>1</gFlags>
         <BeepAtEnd>1</BeepAtEnd>
@@ -57,7 +57,7 @@
         <AsmXref>0</AsmXref>
         <CCond>1</CCond>
         <CCode>0</CCode>
-        <CListInc>1</CListInc>
+        <CListInc>0</CListInc>
         <CSymb>0</CSymb>
         <LinkerCodeListing>0</LinkerCodeListing>
       </ListingPage>
@@ -177,8 +177,8 @@
       <tvExp>0</tvExp>
       <tvExpOptDlg>0</tvExpOptDlg>
       <bDave2>0</bDave2>
-      <PathWithFileName>.\useT1wLed.c</PathWithFileName>
-      <FilenameWithoutPath>useT1wLed.c</FilenameWithoutPath>
+      <PathWithFileName>.\ds_rolling.c</PathWithFileName>
+      <FilenameWithoutPath>ds_rolling.c</FilenameWithoutPath>
       <RteFlg>0</RteFlg>
       <bShared>0</bShared>
     </File>

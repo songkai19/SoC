@@ -3,15 +3,7 @@
 
 #include <reg52.h>
 //#include <STC89C5xRC.H>
-
-#define uint8		unsigned char
-#define uint16	 unsigned short int
-#define uint32	 unsigned long int
-#define int8		 signed char
-#define int16		signed short int
-#define int32		signed long int
-#define uint64	 unsigned long long int
-#define int64		signed long long int
+#include <stdutils.h>
 
 #define CLEAR			0x01          //清屏,数据指针清零 （1）
 #define RETURN     		0x02          //回车,数据指针清零 （1x）
@@ -32,10 +24,10 @@ sbit RS = P2^0;
 sbit E = P2^2;
 
 void lcd1602_check_busy(void);
-void lcd1602_delay(unsigned int time);
+void lcd1602_delay(uint16_t time);
 void lcd1602_initial(void);
-void lcd1602_write_char(uint8 x, uint8 y, uint8 chr);
-void lcd1602_write_str(uint8 addr, uint8 strLen, uint8 *strBuf);
-void lcd1602_write_dat(uint8 dat);
-void lcd1602_write_com(uint8 com, bit toCheckBusy);
+void lcd1602_write_char(uint8_t x, uint8_t y, uint8_t chr);
+void lcd1602_write_str(uint8_t addr, uint8_t strLen, uint8_t *strBuf);
+void lcd1602_write_dat(uint8_t dat);
+void lcd1602_write_com(uint8_t com, bit toCheckBusy);
 #endif

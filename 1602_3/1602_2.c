@@ -3,14 +3,14 @@
 未定义各I/0口(RS,RW,E,DB)，需头文件外定义
 ******************************************************/
 
-//#include <1602_2.h>
+#include <1602_2.h>
 
 /*
 入口参数:time:延时长度
 出口参数:无
 函数功能:非精确延时
 */
-void lcd1602_delay(uint16 time)
+void lcd1602_delay(uint16_t time)
 {
 	while(time--);
 }
@@ -36,7 +36,7 @@ void lcd1602_check_busy(void)
 出口参数:无
 函数功能:向IC芯片发出命令（包括功能设置，以及设置CGRAM和DDRAM的地址）
 */
-void lcd1602_write_com(uint8 com, bit toCheckBusy)
+void lcd1602_write_com(uint8_t com, bit toCheckBusy)
 {
 	if(toCheckBusy)
 		lcd1602_check_busy();
@@ -52,7 +52,7 @@ void lcd1602_write_com(uint8 com, bit toCheckBusy)
 出口参数:无
 函数功能:向DDRAM写入一个字符
 */
-void lcd1602_write_dat(uint8 dat)
+void lcd1602_write_dat(uint8_t dat)
 {
 	lcd1602_check_busy();
 	RS = 1;
@@ -88,7 +88,7 @@ void lcd1602_initial(void)
 出口参数:无
 函数功能:向显示屏输出一个字符
 */
-void lcd1602_write_char(uint8 x, uint8 y, uint8 chr)
+void lcd1602_write_char(uint8_t x, uint8_t y, uint8_t chr)
 {
 	x &= 0x0f;	 //限定x在0~15
 	y &= 0x01;	 //限定x在0~1
@@ -107,9 +107,9 @@ void lcd1602_write_char(uint8 x, uint8 y, uint8 chr)
 出口参数:无
 函数功能:向显示屏输出一个字符串，或向CGRAM写入自定义字符
 */
-void lcd1602_write_str(uint8 addr, uint8 strLen, uint8 *strBuf)
+void lcd1602_write_str(uint8_t addr, uint8_t strLen, uint8_t *strBuf)
 {
-	uint8 i;
+	uint8_t i;
 	// 设置写入目标地址：CGRAM 或者 DDRAM
 	lcd1602_write_com(addr, 1);
 	

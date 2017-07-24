@@ -16,7 +16,8 @@ uchar cnt_PM25=0;	//数码管PM2.5循环计数
 uchar R_data=0; //读数据标志
 /*------激光传感器-------------*/
 uchar USART_RX_STB=0;      
-uchar complete_flag=1;
+uchar complete_flag=0;
+uchar data_processed = 0;
 uchar USART_RX_BUF[16];  //接收缓冲,最大16个字节.
 uchar jj=0;              //判断串口一帧数据是否接收完成的计数变量
 uchar PM25_data[2] = {0};
@@ -47,7 +48,7 @@ uint FucCheckSum(uchar dd[]);
 void main()
 {
  	uchar i;//,ttt;     
-  
+  lcd1602_initial();
 	Serial_Init();	 //串口初始化
 	Timer0_Init();	 //T0 初始化
 //---------开机指令--------------------
@@ -150,12 +151,18 @@ void tm0_isr() interrupt 1 using 1
 	//在读取传感器检测数据时，同时显示到数码管
 		if(R_data==1)
 		{
-			P2 = 0;            
-			P0 = DIS_SEG7[DISP[PM_ASC[cnt_PM25]]];          
-			P2 = DIS_BIT[cnt_PM25];
+//			P2 = 0;            
+//			P0 = DIS_SEG7[DISP[PM_ASC[cnt_PM25]]];          
+//			P2 = DIS_BIT[cnt_PM25];
+//			cnt_PM25++;
+//			if(cnt_PM25>=8)
+//			cnt_PM25=0;
+			
+			lcd1602_write_char(cnt_PM25, 0, PM_ASC[cnt_PM25]);
+			
 			cnt_PM25++;
 			if(cnt_PM25>=8)
-			cnt_PM25=0;
+				cnt_PM25=0;
 		}
 	//-----------UART读取PM2.5---------------------------   
 		jj++;	

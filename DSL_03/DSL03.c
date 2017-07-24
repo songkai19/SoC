@@ -8,13 +8,13 @@
 #define uchar unsigned char
 #define ulong unsigned long
 	
-#define FOSC 11059200L //STC89RC52的晶振值
+//#define FOSC 11059200L //STC89RC52的晶振值
 
 /* define SFR */
 sbit TEST_LED = P1^0;               //work LED, flash once per second
 
 /*     变量定义      */
-uint count=100;  //周期计时
+uint count=10;  //周期计时
 uchar cnt_PM25=0;	//数码管PM2.5循环计数
 uchar T0RH = 0;  //T0重载值的高字节
 uchar T0RL = 0;  //T0重载值的低字节
@@ -23,12 +23,13 @@ uchar R_data = 0;  //读数据标志
 
 /*------激光传感器-------------*/
 uchar USART_RX_STB=0;
-uchar complete_flag=1;
+uchar complete_flag=0;
 uchar USART_RX_BUF[16];  //接收缓冲,最大16个字节.
+uchar ParsedData[2];
 uchar jj=0;              //判断串口一帧数据是否接收完成的计数变量
 uchar PM25_data[2] = {0};
 uchar PM10_data[2] = {0};
-uchar PM_ASC[8];				 //数据分解后的存储数组
+uint PM_ASC[8];				 //数据分解后的存储数组
 uint HR_crc = 0;
 uint check = 0;
 
@@ -62,22 +63,22 @@ void main()
 	uchar i;
 	//P0 = 0xFF;  //P0口初始化
 	lcd1602_initial();
-	EA = 1;			//打开总中断
 	ConfigUART(9600);	//配置串口中断，设置波特率为 9600
-	ConfigTimer0(2);	 	//T0 初始化
+	ConfigTimer0(1);	 	//T0 初始化
+	EA = 1;			//开总中断
 
 	//开机指令
 	for(i=0;i<9;i++)
 	{
 		Serial_send(openComm[i]);
-		Delay_1ms(1);
+		//Delay_1ms(1);
 	}
 	
 	while(1)
  	{
 		if(count==0)
 		{
-			count = 1000;	 
+			count = 10;	 
 			TEST_LED = !TEST_LED;
 			for(i=0;i<9;i++)
 			{
@@ -85,37 +86,15 @@ void main()
 				//Delay_1ms(2);
 			}
 			
-//			tempStr = "RXD signal sent.";
-//			lcd1602_write_str(SET_DDRAM_ADDR, strlen(tempStr), tempStr);
-//			
-//			for (i = 0; i < 50; i++) lcd1602_delay(10000);
-//			lcd1602_write_com(CLEAR, 1);
-//			lcd1602_delay(500);
-			
 			R_data=1;
 			{
 				if(complete_flag==1)
 				{
-//					tempStr = "Data retrieved.";
-//					lcd1602_write_str(SET_DDRAM_ADDR, strlen(tempStr), tempStr);
-//					
-//					for (i = 0; i < 50; i++) lcd1602_delay(10000);
-//					lcd1602_write_com(CLEAR, 1);
-//					lcd1602_delay(500);
-					
-					HR_crc = FucCheckSum(USART_RX_BUF);    //待校验值
-					
+					HR_crc = FucCheckSum(USART_RX_BUF);    //待校验值					
 					check = ((uint)USART_RX_BUF[6]<<8) + USART_RX_BUF[7];   //校验值位
 					
 					if((HR_crc == check)) //判断接收的数据是否正确
 					{
-//						tempStr = "Checksum done.";
-//						lcd1602_write_str(SET_DDRAM_ADDR, strlen(tempStr), tempStr);
-//						
-//						for (i = 0; i < 50; i++) lcd1602_delay(10000);
-//						lcd1602_write_com(CLEAR, 1);
-//						lcd1602_delay(500);
-						
 						if(USART_RX_BUF[1]==0x02)   //2次校验数据标志位，以确保正确性
 						{
 							PM10_data[0] = USART_RX_BUF[2];
@@ -133,36 +112,42 @@ void main()
 
 void ConfigUART(uint baud)
 {
-	SCON = 0X50; //配置串口为模式1，0b0101 0000
 	TMOD &= 0x0F;  //清零 T1 的控制位
 	TMOD |= 0X20; //配置T1 为模式2
-	//PCON = 0X00; 
-	TH1 = 256 - (FOSC/12/32) / baud;  //计算 T1 重载值 //BRUD 9600, 0b1111 1101
-	TL1  = TH1; //初值等于重载值
-	ET1 = 0;        //禁止 T1 中断
-    TR1 = 1;        //启动 T1
-	ES = 1;  		//打开串口中断
+	
+	PCON = 0X00;
+	SCON = 0X50; //配置串口为模式1，0b0101 0000
+	
+	TH1 = 256 - (11059200/12/32) / baud;  //计算 T1 重载值 //BRUD 9600, 0b1111 1101
+	TL1 = TH1;	 //初值等于重载值
+	ET1 = 0;	   //禁止 T1 中断
+	ES  = 1;	   //使能串口中断
+	TR1 = 1;	   //启动 T1
 }
 
 //给LED显示用的刷新定时器中断初始化
 void ConfigTimer0(uint ms)  //T0配置函数
 {
 	ulong tmp;
+	
+	TMOD &= 0xF0;   //清零 T0 的控制位
+	TMOD |= 0x01;   //配置 T0 为模式 1
+	
+	tmp = 11059200 / 12;	  //定时器计数频率
+	tmp = (tmp * ms) / 1000;  //计算所需的计数值
+	tmp = 65536 - tmp;		//计算定时器重载值
+	//tmp = tmp + 31;		  //修正中断响应延时造成的误差
 
-	tmp = FOSC / 12;	  		//定时器计数频率
-	tmp = (tmp * ms) / 1000;  	//计算所需的计数值
-	tmp = 65536 - tmp;			//计算定时器重载值
-	tmp = tmp + 31;		   		//修正中断响应延时造成的误差
-
-	T0RL = (uchar)tmp;
-	T0RH = (uchar)(tmp >> 8);  	//定时器重载值拆分为高低字节
-	TMOD &= 0xF0;   					//清零 T0 的控制位
-	TMOD |= 0x01;   					//配置 T0 为模式 1
-	TH0 = T0RH;	 						//加载 T0 重载值
+	T0RL = (unsigned char)tmp;  //定时器重载值拆分为高低字节
+	T0RH = (unsigned char)(tmp >> 8);  
+	TH0 = T0RH;	 //加载 T0 重载值
 	TL0 = T0RL;
-	ET0 = 1;							//使能 T0 中断
-	TR0 = 1;							//启动 T0
-	count=1000;
+	
+	ET0 = 1;		//使能 T0 中断
+	TR0 = 1;		//启动 T0
+	EA = 1;			//打开总中断
+	
+	count=10;
 }
 
 void InterruptTimer0() interrupt 1 using 1
@@ -186,29 +171,13 @@ void InterruptTimer0() interrupt 1 using 1
 	//换1602显示结果
 	if (R_data == 1)
 	{
-		strcpy(resultStr, "PM2.5: ");
-		strcat(resultStr, &PM_ASC[0]);
-		strcat(resultStr, " ");
-		strcat(resultStr, &PM_ASC[1]);
-		strcat(resultStr, " ");
-		strcat(resultStr, &PM_ASC[2]);
-		strcat(resultStr, " ");
-		strcat(resultStr, &PM_ASC[3]);
-		strcat(resultStr, " ");
+		char* strFormat = "PM2.5: ";
+		strcat(strFormat, &ParsedData[0]);
+		lcd1602_write_str(SET_DDRAM_ADDR, strlen(strFormat), strFormat);
 		
-		lcd1602_write_str(SET_DDRAM_ADDR, strlen(resultStr), resultStr);
-		
-		strcpy(resultStr, "PM10: ");
-		strcat(resultStr, &PM_ASC[4]);
-		strcat(resultStr, " ");
-		strcat(resultStr, &PM_ASC[5]);
-		strcat(resultStr, " ");
-		strcat(resultStr, &PM_ASC[6]);
-		strcat(resultStr, " ");
-		strcat(resultStr, &PM_ASC[7]);
-		strcat(resultStr, " ");
-		
-		lcd1602_write_str(SET_DDRAM_ADDR|LINE_2_OFFSET, strlen(resultStr), resultStr);
+		strFormat = "PM10: ";
+		strcat(strFormat, &ParsedData[1]);
+		lcd1602_write_str(SET_DDRAM_ADDR|LINE_2_OFFSET, strlen(strFormat), strFormat);
 	}
 	
 	jj++;	
@@ -224,7 +193,7 @@ void InterruptUART() interrupt 4 using 2
 	{
 		RI = 0; //手动清零接收中断标志位
 		USART_RX_BUF[USART_RX_STB] = SBUF;
-		jj=0;//中断超时方法
+		jj=0; //中断超时方法
 		USART_RX_STB++;
 		
 		if(USART_RX_STB==9)
@@ -232,10 +201,6 @@ void InterruptUART() interrupt 4 using 2
 			complete_flag=1;
 		}
 	}
-//	if (TI)  //字节发送完毕
-//	{
-//		TI = 0;  //手动清零发送中断标志位
-//	}
 }
 
 void Serial_send(uchar send)
@@ -261,32 +226,46 @@ uint FucCheckSum(uchar dd[])
 void ParseData(void)
 {
 	uint PM25,PM10;
-	uint sss;
- 
-	PM25 = ((uint)PM25_data[0]<<8)+PM25_data[1];
-	PM10 = ((uint)PM10_data[0]<<8)+PM10_data[1];
-	
-	//no exceed of upper limit
-	if(PM25>999)
-		PM25=999;
-	if(PM10>1500)
-		PM10=1500;
 
-	//PM2.5
- 	PM_ASC[0] = PM25/1000;
-	sss = PM25%1000;
-	PM_ASC[1] = sss/100;
-	sss = sss%100;
-	PM_ASC[2] = sss/10;
-	PM_ASC[3] = sss%10;	
+	//字节5存放的校验位的高八位，字节6存放的低八位
+	PM25 = ((uint)PM25_data[0] << 8) + (uint)PM25_data[1];
+	//字节3存放的校验位的高八位，字节4存放的低八位
+	PM10 = ((uint)PM10_data[0] << 8) + (uint)PM10_data[1];
 	
-	//PM10
-	PM_ASC[4] = PM10/1000;
-	sss = PM10%1000;
-	PM_ASC[5] = sss/100;
-	sss = sss%100;
-	PM_ASC[6] = sss/10;
-	PM_ASC[7] = sss%10;	
+	//空气质量差到这样就别再网上显示更大的值了
+	if(PM25 > 999) PM25 = 999;
+	if(PM10 > 1500) PM10 = 1500;
+	
+	ParsedData[0] = PM25;
+	ParsedData[1] = PM10;
+	
+//	uint PM25,PM10;
+//	uint sss;
+// 
+//	PM25 = ((uint)PM25_data[0]<<8)+PM25_data[1];
+//	PM10 = ((uint)PM10_data[0]<<8)+PM10_data[1];
+//	
+//	//no exceed of upper limit
+//	if(PM25>999)
+//		PM25=999;
+//	if(PM10>1500)
+//		PM10=1500;
+
+//	//PM2.5
+// 	PM_ASC[0] = PM25/1000;
+//	sss = PM25%1000;
+//	PM_ASC[1] = sss/100;
+//	sss = sss%100;
+//	PM_ASC[2] = sss/10;
+//	PM_ASC[3] = sss%10;	
+//	
+//	//PM10
+//	PM_ASC[4] = PM10/1000;
+//	sss = PM10%1000;
+//	PM_ASC[5] = sss/100;
+//	sss = sss%100;
+//	PM_ASC[6] = sss/10;
+//	PM_ASC[7] = sss%10;	
 }
 
 //delay for z*1ms		 延时函数
