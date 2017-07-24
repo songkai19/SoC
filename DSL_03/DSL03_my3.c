@@ -33,11 +33,13 @@ uchar LED_W[] = {0xF7, 0xFB, 0xFD, 0xFE};
 void ConfigUART(uint baud);
 void Serial_send(uchar send);
 void ConfigTimer0(uint ms);
-void ParseData(void);
+uchar *ParseData(void); 
+void FormatData(uchar parsedData[]);
 bit FucCheckSum(uchar buff[]);
 
 void main(void)
 {
+	uchar *parsedData;
 	ConfigUART(9600);
 	ConfigTimer0(1);
 	EA = 1;
@@ -68,10 +70,11 @@ void main(void)
 				LED3 = 0;
 				complete_flag = 0;
 				
-				if(FucCheckSum(USART_RX_BUF) && (USART_RX_BUF[1] == 0x02))
+				parsedData = ParseData();
+				if(FucCheckSum(parsedData) && (parsedData[1] == 0x02))
 				{
+					FormatData(parsedData);
 					LED3 = 1;
-					ParseData(); //将检测数值由十六进制转成ASCII码
 				}
 			}
 		}
@@ -94,7 +97,7 @@ void ConfigUART(uint baud)
 	TR1 = 1;
 }
 
-void InterruptUART() interrupt 4
+void InterruptUART() interrupt 4 using 2
 {
 	if(RI)
 	{
@@ -140,7 +143,7 @@ void ConfigTimer0(uint ms)
 	TR0 = 1;
 }
 
-void InterruptTimer0() interrupt 1
+void InterruptTimer0() interrupt 1 using 1
 {
 	TL0 = T0RH;
     TH0 = T0RL;
@@ -172,12 +175,31 @@ bit FucCheckSum(uchar buff[])
 	return (tempq == check);
 }
 
-void ParseData(void)
+uchar *ParseData(void)
+{
+	uchar iLoop, jLoop;
+	uchar tempChar[9];
+	for (iLoop = 0; iLoop < 9; iLoop++)
+	{
+		for (jLoop = 0; jLoop < 8; jLoop++)
+		{
+			tempChar[iLoop] <<= 1;
+			if(USART_RX_BUF[iLoop] & 0x01)
+				tempChar[iLoop] |= 1;
+			
+			USART_RX_BUF[iLoop] >>= 1;
+		}
+	}
+	
+	return tempChar;
+}
+
+void FormatData(uchar parsedData[])
 {	
 	uint PM25,PM10;
  
-	PM25 = ((uint)USART_RX_BUF[4]<<8) + USART_RX_BUF[5];
-	PM10 = ((uint)USART_RX_BUF[2]<<8) + USART_RX_BUF[3];
+	PM25 = ((uint)parsedData[4]<<8) + parsedData[5];
+	PM10 = ((uint)parsedData[2]<<8) + parsedData[3];
 	
 	if(PM25>999) PM25=999;
 	if(PM10>1500) PM10=1500;

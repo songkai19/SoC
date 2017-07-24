@@ -1,11 +1,11 @@
-//youtube ��Ƶ39��
+﻿//youtube 视频39期
 //https://www.youtube.com/watch?v=K18Hl0wdpao
 #include <12864.h>
 
-uchar table[]="��������20170710";
+uchar table[]="万事如意20170710";
 	
-//��ʱ��������12MHz�ľ���Ƶ����
-//��Լ50us����ʱ
+//延时函数，在12MHz的晶振频率下
+//大约50us的延时
 void delay_50us(uint t)
 {
 	uchar j;
@@ -13,8 +13,8 @@ void delay_50us(uint t)
 		for(j=19;j>0;j--);
 }
 
-//��ʱ��������12MHz�ľ���Ƶ����
-//��Լ50ms����ʱ
+//延时函数，在12MHz的晶振频率下
+//大约50ms的延时
 void delay_50ms(uint t)
 {
 	uchar j;
@@ -25,11 +25,11 @@ void delay_50ms(uint t)
 void write_12864(uchar dat, uchar rsFlag)
 {
 	int i;
-	//����Ƭѡλ��ʹʱ���źű����Ч
+	//拉高片选位，使时钟信号变得有效
 	cs=1;
 	
-	//ˢ��ǰ��λ1 - ͬ��λ��
-	//�˕r��ݔӋ���������ÁK�Ҵ��Ђ�ݔ����ͬ��
+	//刷入前五位1 - 同步位串
+	//此時傳輸計數將被重置並且串列傳輸將被同步
 	for(i=0;i<5;i++)
 	{
 		sid=1;
@@ -38,8 +38,8 @@ void write_12864(uchar dat, uchar rsFlag)
 		sclk=1;
 		delay_50us(1);
 	}
-	//�ٸ��S�ăɂ�λԪ�ִ��քeָ����ݔ����λԪ��RW�����������x��λԪ��RS����
-	//����ڰ˵�λԪ�t�騔0����
+	//再跟隨的兩個位元字串分別指定傳輸方向位元（RW）及暫存器選擇位元（RS），
+	//最後第八的位元則為〝0〞。
 	sid=0; //rw=0;
 	sclk=0;
 	delay_50us(1);
@@ -52,15 +52,15 @@ void write_12864(uchar dat, uchar rsFlag)
 	sclk=1;
 	delay_50us(1);
 	
-	sid=0; //βλ0ռλ;
+	sid=0; //尾位0占位;
 	sclk=0;
 	delay_50us(1);
 	sclk=1;
 	delay_50us(1);
 	
-	//�ڽ��յ�ͬ��λԪ��RW��RS�Y�ϵĆ�ʼλԪ�M�ᣬÿһ����λԪ��ָ����֞�ɂ�λԪ�M���յ���
-	//�^��4λԪ��DB7~DB4����ָ���Y�ό��������ڵ�һ��λԪ�M��LSB���֣�
-	//���^��4λԪ��DB3~DB0����ָ���Y�τt�������ڵڶ���λԪ�M��LSB���֣�������P������λԪ�t����0��
+	//在接收到同步位元及RW和RS資料的啟始位元組後，每一個八位元的指令將被分為兩個位元組接收到：
+	//較高4位元（DB7~DB4）的指令資料將會被放在第一個位元組的LSB部分，
+	//而較低4位元（DB3~DB0）的指令資料則會被放在第二個位元組的LSB部分，至於相關的另四位元則都為0。
 	for(i=0;i<4;i++)
 	{
 		//0x80 = 0b10000000
@@ -73,11 +73,11 @@ void write_12864(uchar dat, uchar rsFlag)
 		delay_50us(1);
 		sclk=1;
 		delay_50us(1);
-		//��λ���1/0
+		//逐位检查1/0
 		dat<<=1;
 	}
 	
-	//����λ����ռλ
+	//第四位用零占位
 	for(i=0;i<4;i++)
 	{
 		sid=0;
@@ -99,11 +99,11 @@ void write_12864(uchar dat, uchar rsFlag)
 		delay_50us(1);
 		sclk=1;
 		delay_50us(1);
-		//��λ���1/0
+		//逐位检查1/0
 		dat<<=1;
 	}
 	
-	//����λ����ռλ
+	//第四位用零占位
 	for(i=0;i<4;i++)
 	{
 		sid=0;		
@@ -113,13 +113,13 @@ void write_12864(uchar dat, uchar rsFlag)
 		delay_50us(1);
 	}
 	
-	//����Ƭѡ������1�ֽ����ݴ���
+	//拉低片选，结束1字节数据传输
 	cs=0;
 }
 
 void init_12864lcd(void)
 {
-	//�����ϵ�
+	//启动上电
 	reset=0;
 	delay_50us(60);
 	reset=1;
@@ -127,7 +127,7 @@ void init_12864lcd(void)
 	write_12864(0x30, 0);
 	delay_50us(30);
 	
-	//������Ļ����ʼ������
+	//开启屏幕，初始化设置
 	write_12864(0x0f, 0);
 	delay_50us(4);
 	/*write_12864(0x01, 0);
