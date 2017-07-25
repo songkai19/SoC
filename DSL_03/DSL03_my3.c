@@ -7,7 +7,7 @@
 
 sbit LED = P1^7; //sending command data
 sbit LED2 = P1^6; //reached predefined overflow times (100)
-sbit LED3 = P1^4;
+sbit LED3 = P1^5; //parsing data
 
 uint cnt = 0;
 uint i,k;
@@ -33,48 +33,51 @@ uchar LED_W[] = {0xF7, 0xFB, 0xFD, 0xFE};
 void ConfigUART(uint baud);
 void Serial_send(uchar send);
 void ConfigTimer0(uint ms);
-uchar *ParseData(void); 
-void FormatData(uchar parsedData[]);
-bit FucCheckSum(uchar buff[]);
+void ParseData(void);
+bit FucCheckSum(void);
 
 void main(void)
 {
-	uchar *parsedData;
 	ConfigUART(9600);
 	ConfigTimer0(1);
 	EA = 1;
 	
-	LED = 0;
+	//LED = 0;
 	for(i=0;i<9;i++)
 	{
 		Serial_send(openComm[i]);
 	}
-	LED = 1;
+	//LED = 1;
 	
 	while (1)
 	{
-		if (cnt >= 50)
+		if (cnt >= 100)
 		{
 			cnt = 0;
 			LED2 = !LED2;
 			
-			LED = 0;
+			//LED = 0;
 			for(i=0;i<9;i++)
 			{
 				Serial_send(dataComm[i]);
 			}
-			LED = 1;
+			//LED = 1;
 			
 			if (complete_flag == 1)
 			{
-				LED3 = 0;
+				//LED3 = 0;
 				complete_flag = 0;
 				
-				parsedData = ParseData();
-				if(FucCheckSum(parsedData) && (parsedData[1] == 0x02))
+//				//echo for testing
+//				for(i = 0; i < 9; i++)
+//				{
+//					Serial_send(USART_RX_BUF[i]);
+//				}
+				
+				if(FucCheckSum() && (USART_RX_BUF[1] == 0x02))
 				{
-					FormatData(parsedData);
-					LED3 = 1;
+					ParseData();
+					//LED3 = 1;
 				}
 			}
 		}
@@ -103,12 +106,10 @@ void InterruptUART() interrupt 4 using 2
 	{
 		RI = 0;
 		
-		if (USART_RX_STB < 9)
-		{
-			USART_RX_BUF[USART_RX_STB] = SBUF;
-			USART_RX_STB++;
-		}
-		else
+		USART_RX_BUF[USART_RX_STB] = SBUF;
+		USART_RX_STB++;
+		
+		if (USART_RX_STB == 9)
 		{
 			USART_RX_STB = 0;
 			complete_flag = 1;
@@ -150,7 +151,7 @@ void InterruptTimer0() interrupt 1 using 1
 	cnt++;
 	P0 = 0xFF;
 	
-	switch(i)
+	switch(k)
 	{
 		case 0: P0 = PM_ASC[k]; P2 = LED_W[k]; k++; break;
 		case 1: P0 = PM_ASC[k]; P2 = LED_W[k]; k++; break;
@@ -160,52 +161,33 @@ void InterruptTimer0() interrupt 1 using 1
 	}
 }
 
-bit FucCheckSum(uchar buff[])
+bit FucCheckSum()
 {
 	uchar j;
 	uint tempq = 0;
 	for(j = 0; j <= 5; j++)
 	{
-		tempq += buff[j];
+		tempq += USART_RX_BUF[j];
 	}
-	tempq += buff[8];
+	tempq += USART_RX_BUF[8];
 	
-	check = (uint)((buff[6]<<8) | buff[7]);
+	check = (uint)((USART_RX_BUF[6]<<8) | USART_RX_BUF[7]);
 	
 	return (tempq == check);
 }
 
-uchar *ParseData(void)
-{
-	uchar iLoop, jLoop;
-	uchar tempChar[9];
-	for (iLoop = 0; iLoop < 9; iLoop++)
-	{
-		for (jLoop = 0; jLoop < 8; jLoop++)
-		{
-			tempChar[iLoop] <<= 1;
-			if(USART_RX_BUF[iLoop] & 0x01)
-				tempChar[iLoop] |= 1;
-			
-			USART_RX_BUF[iLoop] >>= 1;
-		}
-	}
-	
-	return tempChar;
-}
-
-void FormatData(uchar parsedData[])
+void ParseData()
 {	
-	uint PM25,PM10;
+	uint PM25; //,PM10;
  
-	PM25 = ((uint)parsedData[4]<<8) + parsedData[5];
-	PM10 = ((uint)parsedData[2]<<8) + parsedData[3];
+	PM25 = (uint)((USART_RX_BUF[4]<<8) + USART_RX_BUF[5]);
+	//PM10 = (uint)((USART_RX_BUF[2]<<8) + USART_RX_BUF[3]);
 	
-	if(PM25>999) PM25=999;
-	if(PM10>1500) PM10=1500;
+	//if(PM25>999) PM25=999;
+	//if(PM10>1500) PM10=1500;
 
 	PM_ASC[0] = LedChar[PM25%10];
 	PM_ASC[1] = LedChar[PM25/10%10];
-	PM_ASC[2] = LedChar[PM25/100%10];
-	PM_ASC[3] = LedChar[PM25/1000%10];
+//	PM_ASC[2] = LedChar[PM25/100%10];
+//	PM_ASC[3] = LedChar[PM25/1000%10];
 }
